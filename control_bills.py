@@ -17,8 +17,28 @@ def load_database():
 
 
 '''
-    CRUD Bills
+    CRUD/Actions Bills
 '''
+
+
+def show_help_cmds():
+    dict_cmds = {
+        '/list': 'Exibir todas as contas',
+        '/keys': 'Exibir todas as chaves das contas',
+        '/new': 'Inserir nova conta',
+        '/alt': 'Alterar algum dado da conta',
+        '/detail': 'Detalhar dados da conta',
+        '/del': 'Remover conta',
+        '/pay': 'Pagar uma conta',
+        '/owe': 'Dever uma conta',
+        '/wiki': 'Exibir todas os comandos para usar o Wikibills',
+        '/turn_month': 'Faz a virada do mês'
+    }
+
+    msg = ''
+    for k, v in dict_cmds.items():
+        msg += '<b>{0}</b><pre> - {1}</pre>\n'.format(k, v)
+    return msg
 
 
 def show_bills(database, yearmonth):
@@ -27,7 +47,7 @@ def show_bills(database, yearmonth):
     sum_receipt = 0
 
     # Show 'yearmonth' as a title
-    output_bills += '<pre>' + yearmonth + '</pre>\n'
+    output_bills += '<b>' + yearmonth + '</b>\n'
     output_bills += '<pre>' + ('-' * 25) + '</pre>\n'
 
     # Get receipt
@@ -69,9 +89,12 @@ def new_bill(database, yearmonth, key, descr, value, status=False, pay_day=''):
             'status': status
     }
 
+    save_database(database)
+
 
 def delete_bill(database, yearmonth, key):
     del database[yearmonth]['expense'][key]
+    save_database(database)
 
 
 def alter_bill(database, yearmonth, key, attr, new_value):
@@ -79,6 +102,13 @@ def alter_bill(database, yearmonth, key, attr, new_value):
         database[yearmonth]['expense'][key][attr] = capitalize_str(new_value)
     else:
         database[yearmonth]['expense'][key][attr] = new_value
+
+    save_database(database)
+
+
+def change_status_bill(database, yearmonth, key, status):
+    database[yearmonth]['expense'][key]['status'] = status
+    save_database(database)
 
 '''
     Month Actions

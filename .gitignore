@@ -1,5 +1,5 @@
 .idea
 .lm
 trash_code.py
-telebot.ini
+*.ini
 cp_db.json
