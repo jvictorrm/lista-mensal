@@ -1,75 +1,107 @@
 import telebot
-import json
-# import operator
+import configparser
+# import datetime
+from control_bills import *
 
 """
 Setup the bot
 """
-bot = telebot.TeleBot('197158727:AAGKzk9u5Q6VzbMjUPmoGPrJhcOKuTWxkew')
-bot_info = bot.get_me()  # Execute an API call
-result = bot_info  # Get the result of the execution
 
-'''
-print(result.id)
-print(result.username)
-print(result.first_name)
-print(result.last_name)
-'''
+# get token from '.ini' file
+config = configparser.ConfigParser()
+config.read('telebot.ini')
+bot = telebot.TeleBot(config['default']['token'])
 
-month = {
-    '201603': {
-        'claro': {'descr': 'Claro', 'value': 42, 'pay_day': '10/03/2016', 'status': False},
-        'casa': {'descr': 'Casa', 'value': 150, 'pay_day': '', 'status': False},
-        'nubank': {'descr': 'Nubank', 'value': 171, 'pay_day': '15/03/2016', 'status': True},
-        'superxcap': {'descr': 'SuperXCap', 'value': 22.14, 'pay_day': '05/03/2016', 'status': True},
-        'faculdade': {'descr': 'Faculdade', 'value': 600, 'pay_day': '07/03/2016', 'status': True},
-        'netflix': {'descr': 'Netflix', 'value': 7.5, 'pay_day': '', 'status': True},
-        'cabelo': {'descr': 'Cabelo', 'value': 20, 'pay_day': '', 'status': False},
-        'pagar-claudio': {'descr': 'Pagar Cláudio', 'value': 23, 'pay_day': '', 'status': True}
-    }
-}
+dbjson = load_database() # get 'database' from json file
+yearmonth = ''.join([x for x in dbjson.keys()])  # get 'yearmonth' key (YYYYMM) from json
 
 
-def save_database(database):
-    with open('db.json', 'w') as out_json:
-        json.dump(database, out_json, indent=4)
+# Command '/list' to show all bills
+@bot.message_handler(commands=['list'])
+def send_bills(message):
+    bot.send_message(message.chat.id, show_bills(dbjson, yearmonth), parse_mode='HTML')
 
 
-def load_database():
-    return json.loads(open('db.json').read())
+# Command '/keys' to show all bills key's
+@bot.message_handler(commands=['keys'])
+def send_bills_keys(message):
+    bot.send_message(message.chat.id, show_bills_keys(dbjson, yearmonth), parse_mode='HTML')
 
 
-def show_bills(database):
-    output_bills = ''
-    sum_bills = 0
-    for k1, v1 in database.items():
-        for k2, v2 in v1.items():
-            # print(k, v['descr'], v['pay_day'], v['value'], v['status'])
-            output_bills += '{0:<15s} {1:6.2f} {2}'\
-                                .format(v2['descr'],
-                                        v2['value'],
-                                        ('P' if v2['status'] else 'D')) + '\n'
-            sum_bills += v2['value']
-
-    output_bills += ('-' * 25) + '\n'
-    output_bills += '{0:<15s} {1:6.2f}'.format('Receita', 1380) + '\n'
-    output_bills += '{0:<15s} {1:6.2f}'.format('Despesa', sum_bills) + '\n'
-    output_bills += ('-' * 25) + '\n'
-    output_bills += '{0:<15s} {1:6.2f}'.format('Saldo', 1380 - sum_bills)
-    print(output_bills)
+# Command '/new' to create a new bill
+@bot.message_handler(commands=['new'])
+def create_new_bill(message):
+    msg = """
+Informe a nova conta no formato: <b>key|descr|value|status*|pay_day*</b>
+<i>(*) Campos não obrigatórios</i>
+    """
+    resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
+    bot.register_next_step_handler(resp, get_new_bill)
 
 
-def new_bill(database, cmonth, key, descr, value, pay_day, status=False):
-    database[cmonth][key] = {
-            'descr': descr,
-            'value': value,
-            'pay_day': pay_day,
-            'status': status
-    }
+# create a new bill from telegram bot
+def get_new_bill(message):
+    key, descr, value, status, pay_day = message.text.split('|')
+    value = float(value) if is_number(value) else value
+    status = bool(status)
+    print(key, descr, value, status, pay_day)
+    msg = "Nova conta inserida: <b>{}</b>".format(key)
+    bot.send_message(message.chat.id, msg, parse_mode='HTML')
 
-#save_database(month)
-teste = load_database()
-show_bills(teste)
-new_bill(teste, '201603', 'teste', 'testando namoral', 499, '', True)
-save_database(teste)
-show_bills(teste)
+
+# Command '/alt' to modify a created bill
+@bot.message_handler(commands=['alt'])
+def modify_bill(message):
+    msg = "Altere a conta desejada no formato: <b>key|attr|new_value</b>"
+    resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
+    bot.register_next_step_handler(resp, get_modified_bill)
+
+
+# modify a created bill from telegram bot
+def get_modified_bill(message):
+    key, attr, new_value = message.text.split('|')
+    new_value = float(new_value) if is_number(new_value) else new_value
+    print(key, attr, new_value)
+    msg = "<b>{0}</b> da conta <b>{1}</b> alterada!".format(attr.capitalize(), key)
+    bot.send_message(message.chat.id, msg, parse_mode='HTML')
+
+
+# Command '/del' to remove a created bill
+@bot.message_handler(commands=['del'])
+def remove_bill(message):
+    msg = "Delete a conta desejada no formato: <b>key</b>"
+    resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
+    bot.register_next_step_handler(resp, get_deleted_bill)
+
+
+# delete a created bill from telegram bot
+def get_deleted_bill(message):
+    key = message.text
+    msg = "Conta <b>{0}</b> removida!".format(key)
+    print(key)
+    bot.send_message(message.chat.id, msg, parse_mode='HTML')
+
+
+# create a new bill
+'''new_bill(database=dbjson,
+         yearmonth=yearmonth,
+         key='teste',
+         descr='testando namoral',
+         value=499,
+         status=True)'''
+
+# alter a created bill
+'''alter_bill(database=dbjson,
+           yearmonth=yearmonth,
+           key='teste',
+           attr='descr',
+           new_value='tEstar alteracao')'''
+
+# delete a created bill
+'''delete_bill(dbjson, yearmonth, 'teste')'''
+
+# save_database(dbjson)
+# dbjson = load_database()
+
+print('Wikibills em atividade...')
+bot.polling()
