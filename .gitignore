@@ -1,5 +1,5 @@
 .idea
 .lm
-trash_code.py
+trash.py
 *.ini
 cp_db.json

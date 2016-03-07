@@ -1,6 +1,9 @@
+from threading import Timer
+
+import time
+
 from useful import *
 import json
-
 
 '''
     Save/Load Database
@@ -58,7 +61,7 @@ def show_bills(database, yearmonth):
     for k, v in database[yearmonth]['expense'].items():
         sum_expense += v['value']
 
-        output_bills += '<pre>{0:<15s} {1:6.2f} {2}</pre>'\
+        output_bills += '<pre>{0:<15s} {1:6.2f}</pre> <b>{2}</b>'\
                         .format(v['descr'][:13],
                                 v['value'],
                                 ('P' if v['status'] else 'D')) + '\n'
@@ -83,7 +86,7 @@ def show_bills_keys(database, yearmonth):
 
 def new_bill(database, yearmonth, key, descr, value, status=False, pay_day=''):
     database[yearmonth]['expense'][key.lower()] = {
-            'descr': capitalize_str(descr),
+            'descr': descr,
             'value': value,
             'pay_day': pay_day,
             'status': status
@@ -97,11 +100,20 @@ def delete_bill(database, yearmonth, key):
     save_database(database)
 
 
-def alter_bill(database, yearmonth, key, attr, new_value):
+def alter_bill(bot, message, database, yearmonth, key, attr, new_value):
     if attr in ['descr']:
         database[yearmonth]['expense'][key][attr] = capitalize_str(new_value)
     else:
         database[yearmonth]['expense'][key][attr] = new_value
+
+    if attr in ['pay_day']:
+        warn_days = 3
+        pay_day = datetime.datetime.strptime(new_value, '%d/%m/%Y')
+        sec_pay_day = (pay_day - datetime.timedelta(days=warn_days)).timetuple()
+        Timer(time.mktime(sec_pay_day),
+              new_notification_pay_day,
+              [bot, message, database[yearmonth]['expense'][key]['descr'],
+               warn_days]).start()
 
     save_database(database)
 
@@ -109,6 +121,29 @@ def alter_bill(database, yearmonth, key, attr, new_value):
 def change_status_bill(database, yearmonth, key, status):
     database[yearmonth]['expense'][key]['status'] = status
     save_database(database)
+
+
+def new_notification_pay_day(bot, message, bill, days):
+    msg = "Conta <b>{}</b> vencerá em <b>{} dia(s)</b>".format(bill, days)
+    bot.send_message(message.chat.id, msg, parse_mode='HTML')
+
+
+def start_notify_all_pay_day(bot, message, database, yearmonth):
+    # now = datetime.datetime.now()
+    # pay_day = datetime.datetime.strptime('04/03/2016 22:55:10', '%d/%m/%Y %H:%M:%S')
+
+    warn_days = 3
+
+    for k, v in database[yearmonth]['expense'].items():
+        if not v['pay_day']:
+            continue
+
+        pay_day = datetime.datetime.strptime(v['pay_day'], '%d/%m/%Y')
+        sec_pay_day = (pay_day - datetime.timedelta(days=warn_days)).timetuple()
+        Timer(time.mktime(sec_pay_day),
+              new_notification_pay_day,
+              [bot, message, v['descr'], warn_days]).start()
+
 
 '''
     Month Actions
@@ -124,3 +159,5 @@ def change_month_activity(database, yearmonth):
     database[get_next_month(yearmonth)] = dict_next_month
     del database[yearmonth]
     save_database(database)
+
+

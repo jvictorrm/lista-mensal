@@ -1,7 +1,7 @@
 # coding: utf-8
+import re
 import telebot
 import configparser
-# import datetime
 from control_bills import *
 
 """
@@ -132,11 +132,14 @@ def get_resp_turn_month(message):
 
     resp = message.text.capitalize()
 
-    if resp not in ['Sim', 'S']:
+    if not resp == 'Sim':
         bot.send_message(message.chat.id, "Operação cancelada!")
     else:
         change_month_activity(dbjson, yearmonth)
+        start_notify_all_pay_day(bot, message, dbjson, yearmonth)
         bot.send_message(message.chat.id, "Operação realizada!")
+
+    # start_notify_all_pay_day(bot, message, dbjson, yearmonth)
 
 
 # Command '/new' to create a new bill
@@ -148,8 +151,16 @@ Informe a nova conta no formato: <b>key|descr|value|status|pay_day</b>
 <b>key</b> - Chave da conta
 <b>descr</b> - Descrição da conta
 <b>value</b> - Valor da conta
-<b>status*</b> - Status da conta (Deixar vazio para DEVENDO)
-<b>pay_day*</b> - Dt. de Venc. da conta
+<b>status*</b> - Status da conta
+<b>pay_day*</b> - Data de Vencimento
+
+<i>Formato:</i>
+
+<b>key</b> - Letras minúsculas, Traços (-) (opcional)
+<b>descr</b> - Livre, Alfanumérico somente
+<b>value</b> - Decimal <b>(Ex: 9999999.99)</b>
+<b>status*</b> - <b>P</b> para Pago ou <b>campo vazio</b> para Devendo
+<b>pay_day*</b> - <b>DD/MM/AAAA</b>
 
 <i>(*) Campos não obrigatórios</i>
     """
@@ -159,17 +170,28 @@ Informe a nova conta no formato: <b>key|descr|value|status|pay_day</b>
 
 # create a new bill from telegram bot
 def get_new_bill(message):
+    pattern_new = r"^([a-z\-]+)\|(\w+( \w+)*)\|(\d+\.\d{2})\|?([Pp]|[Dd])?\|?(\d{2}\/\d{2}\/\d{4})?$"
+
+    if not bool(re.search(pattern_new, message.text)):
+        msg = "Entrada com o <b>formato inválido</b>!\n\n" \
+              "<b>Operação cancelada</b>"
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
+
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
 
     key, descr, value, status, pay_day = message.text.split('|')
+    pay_day = str_to_date(pay_day) if not pay_day == '' else pay_day
 
     new_bill(database=dbjson,
              yearmonth=yearmonth,
-             key=key.lower(),
-             descr=descr,
+             key=key,
+             descr=capitalize_str(descr),
              value=float(value),
-             status=bool(status))
+             status=bool(status),
+             pay_day=pay_day)
+
     msg = "Nova conta inserida: <b>{}</b>".format(key)
     bot.send_message(message.chat.id, msg, parse_mode='HTML')
 
@@ -193,9 +215,13 @@ def get_modified_bill(message):
     yearmonth = ''.join([x for x in dbjson.keys()])
 
     key, attr, new_value = message.text.split('|')
-    new_value = float(new_value) if is_number(new_value) else new_value
 
-    alter_bill(database=dbjson,
+    if attr == 'value':
+        new_value = float(new_value) if is_number(new_value) else new_value
+
+    alter_bill(bot=bot,
+               message=message,
+               database=dbjson,
                yearmonth=yearmonth,
                key=key.lower(),
                attr=attr,
