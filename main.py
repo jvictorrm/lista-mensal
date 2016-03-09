@@ -49,10 +49,16 @@ def pay_bill(message):
 
 # pay a bill from telegram bot
 def get_paid_bill(message):
+    if not bool(re.search(r"^([a-z]+)$", message.text)):
+        msg = "Chave com o <b>formato inválido</b>!\n\n" \
+              "<b>Operação cancelada</b>"
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
+
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
 
-    key = message.text.lower()
+    key = message.text
     msg = "Conta <b>{}</b> paga!".format(key)
     change_status_bill(dbjson, yearmonth, key, True)
     bot.send_message(message.chat.id, msg, parse_mode='HTML')
@@ -64,6 +70,10 @@ def owe_bill(message):
     msg = """Informe a conta a ser devida no formato: <b>key</b>
 
 <b>key</b> - Chave da conta
+
+<i>Formato:</i>
+
+<b>key</b> - Letras minúsculas, Traços (-) (opcional)
     """
     resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
     bot.register_next_step_handler(resp, get_owed_bill)
@@ -71,10 +81,16 @@ def owe_bill(message):
 
 # to owe a bill from telegram bot
 def get_owed_bill(message):
+    if not bool(re.search(r"^([a-z]+)$", message.text)):
+        msg = "Chave com o <b>formato inválido</b>!\n\n" \
+              "<b>Operação cancelada</b>"
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
+
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
 
-    key = message.text.lower()
+    key = message.text
     msg = "Conta <b>{}</b> devida!".format(key)
     change_status_bill(dbjson, yearmonth, key, False)
     bot.send_message(message.chat.id, msg, parse_mode='HTML')
@@ -82,20 +98,33 @@ def get_owed_bill(message):
 
 # Command '/detail' to show all attributes from bill
 @bot.message_handler(commands=['detail'])
-def pay_bill(message):
+def detail_bill(message):
     msg = """Informe a conta a ser detalhada no formato: <b>key</b>
 
 <b>key</b> - Chave da conta
+
+<i>Formato:</i>
+
+<b>key</b> - Letras minúsculas, Traços (-) (opcional)
     """
+
     resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
     bot.register_next_step_handler(resp, get_detailed_bill)
 
 
 # to detail a bill from telegram bot
 def get_detailed_bill(message):
+    if not bool(re.search(r"^([a-z]+)$", message.text)):
+        msg = "Chave com o <b>formato inválido</b>!\n\n" \
+              "<b>Operação cancelada</b>"
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
+
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
-    key = message.text.lower()
+
+    key = message.text
+    status = 'Pago' if dbjson[yearmonth]['expense'][key]['status'] else 'Devendo'
 
     msg = """Informações da chave <b>{0}</b>
 
@@ -104,10 +133,10 @@ Valor....: <b>{2:6.2f}</b>
 Dt. Venc.: <b>{3}</b>
 Status...: <b>{4}</b>
     """.format(key,
-               dbjson[yearmonth]['expense'][key]['descr'][0:13],
+               dbjson[yearmonth]['expense'][key]['descr'],
                dbjson[yearmonth]['expense'][key]['value'],
                dbjson[yearmonth]['expense'][key]['pay_day'],
-               'Pago' if dbjson[yearmonth]['expense'][key]['status'] else 'Devendo')
+               status)
 
     bot.send_message(message.chat.id, msg, parse_mode='HTML')
 
@@ -127,42 +156,40 @@ def turn_month(message):
 
 # to turn the month in activity from telegram bot
 def get_resp_turn_month(message):
+    if not message.text.capitalize() == 'Sim':
+        msg = "<b>Operação cancelada</b>"
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
+
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
 
-    resp = message.text.capitalize()
-
-    if not resp == 'Sim':
-        bot.send_message(message.chat.id, "Operação cancelada!")
-    else:
-        change_month_activity(dbjson, yearmonth)
-        start_notify_all_pay_day(bot, message, dbjson, yearmonth)
-        bot.send_message(message.chat.id, "Operação realizada!")
-
-    # start_notify_all_pay_day(bot, message, dbjson, yearmonth)
+    change_month_activity(dbjson, yearmonth)
+    start_notify_all_pay_day(bot, message, dbjson, yearmonth)
+    bot.send_message(message.chat.id, "<b>Operação realizada</b>", parse_mode='HTML')
 
 
 # Command '/new' to create a new bill
 @bot.message_handler(commands=['new'])
 def create_new_bill(message):
     msg = """
-Informe a nova conta no formato: <b>key|descr|value|status|pay_day</b>
+Informe a nova conta no formato: <b>key*|descr*|value*|status|pay_day</b>
 
-<b>key</b> - Chave da conta
-<b>descr</b> - Descrição da conta
-<b>value</b> - Valor da conta
-<b>status*</b> - Status da conta
-<b>pay_day*</b> - Data de Vencimento
+<b>key*</b> - Chave da conta
+<b>descr*</b> - Descrição da conta
+<b>value*</b> - Valor da conta
+<b>status</b> - Status da conta
+<b>pay_day</b> - Data de Vencimento
 
 <i>Formato:</i>
 
-<b>key</b> - Letras minúsculas, Traços (-) (opcional)
-<b>descr</b> - Livre, Alfanumérico somente
-<b>value</b> - Decimal <b>(Ex: 9999999.99)</b>
-<b>status*</b> - <b>P</b> para Pago ou <b>campo vazio</b> para Devendo
-<b>pay_day*</b> - <b>DD/MM/AAAA</b>
+<b>key*</b> - Letras minúsculas, Traços (-) (opcional)
+<b>descr*</b> - Livre, Alfanumérico somente
+<b>value*</b> - Decimal <b>(Ex: 9999999.99)</b>
+<b>status</b> - <b>P</b> para Pago ou <b>campo vazio</b> para Devendo
+<b>pay_day</b> - <b>DD/MM/AAAA</b>
 
-<i>(*) Campos não obrigatórios</i>
+<i>(*) Campos obrigatórios</i>
     """
     resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
     bot.register_next_step_handler(resp, get_new_bill)
@@ -170,10 +197,11 @@ Informe a nova conta no formato: <b>key|descr|value|status|pay_day</b>
 
 # create a new bill from telegram bot
 def get_new_bill(message):
-    pattern_new = r"^([a-z\-]+)\|(\w+( \w+)*)\|(\d+\.\d{2})\|?([Pp]|[Dd])?\|?(\d{2}\/\d{2}\/\d{4})?$"
+    pattern_new = r"^([a-z]+(\-[a-z]+)*)\|" \
+                  r"(\w+( \w+)*)\|(\d+\.\d{2})\|?([Pp])?\|?(\d{2}\/\d{2}\/\d{4})?$"
 
     if not bool(re.search(pattern_new, message.text)):
-        msg = "Entrada com o <b>formato inválido</b>!\n\n" \
+        msg = "Entrada de Inserção com o <b>formato inválido</b>!\n\n" \
               "<b>Operação cancelada</b>"
         bot.send_message(message.chat.id, msg, parse_mode='HTML')
         return
@@ -182,9 +210,10 @@ def get_new_bill(message):
     yearmonth = ''.join([x for x in dbjson.keys()])
 
     key, descr, value, status, pay_day = message.text.split('|')
-    pay_day = str_to_date(pay_day) if not pay_day == '' else pay_day
 
-    new_bill(database=dbjson,
+    new_bill(bot=bot,
+             message=message,
+             database=dbjson,
              yearmonth=yearmonth,
              key=key,
              descr=capitalize_str(descr),
@@ -199,34 +228,78 @@ def get_new_bill(message):
 # Command '/alt' to modify a created bill
 @bot.message_handler(commands=['alt'])
 def modify_bill(message):
-    msg = """Altere a conta desejada no formato: <b>key|attr|new_value</b>
+    msg = """Altere a conta desejada no formato: <b>key*|attr*|new_value*</b>
 
-<b>key</b> - Chave da conta
-<b>attr</b> - Atributo da conta
-<b>new_value</b> - Novo valor para o atrib. da conta
-    """
+<b>key*</b> - Chave da conta
+<b>attr*</b> - Atributo da conta
+<b>new_value*</b> - Novo valor para o atrib. da conta
+
+<i>Formato:</i>
+
+<b>key*</b> - Letras minúsculas, Traços (-) (opcional)
+<b>attr*</b> - Letras minúsculas somente
+<b>new_value*</b> - Livre**
+
+<i>(*) Campos obrigatórios (somente </i><b>Data de Venc.</b><i> pode estar vazia)</i>
+<i>(**) Informar o valor no formato do atributo a ser alterado</i>
+"""
+
     resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
     bot.register_next_step_handler(resp, get_modified_bill)
 
 
 # modify a created bill from telegram bot
 def get_modified_bill(message):
-    dbjson = load_database()
-    yearmonth = ''.join([x for x in dbjson.keys()])
+    pattern_alt = r"^([a-z]+(\-[a-z]+)*)\|([a-z]+(\_[a-z]+)*)\|(.*)$"
+
+    if not bool(re.search(pattern_alt, message.text)):
+        msg = "Entrada de Alteração com o <b>formato inválido</b>!\n\n" \
+              "<b>Operação cancelada</b>"
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
 
     key, attr, new_value = message.text.split('|')
 
-    if attr == 'value':
-        new_value = float(new_value) if is_number(new_value) else new_value
+    if attr == 'descr':
+        if not bool(re.search(r"^(\w+( \w+)*)$", new_value)):
+            msg = "<b>Descrição</b> com o formato inválido!\n\n" \
+                  "<b>Operação cancelada</b>"
+            bot.send_message(message.chat.id, msg, parse_mode='HTML')
+            return
+        else:
+            new_value = capitalize_str(new_value)
+    elif attr == 'status':
+        msg = "Para alterar o <b>Status</b> use os comandos <b>/pay ou /owe</b>!\n\n" \
+              "<b>Operação cancelada</b>"
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
+    elif attr == 'pay_day':
+        if not bool(re.search(r"^(\d{2}/\d{2}/\d{4})$", new_value)) and not new_value == '':
+            msg = "<b>Data de Vencimento</b> com o formato inválido!\n\n" \
+                  "<b>Operação cancelada</b>"
+            bot.send_message(message.chat.id, msg, parse_mode='HTML')
+            return
+    elif attr == 'value':
+        if not bool(re.search(r"^(\d+\.\d{2})$", new_value)):
+            msg = "<b>Valor da conta</b> com o formato inválido!\n\n" \
+                  "<b>Operação cancelada</b>"
+            bot.send_message(message.chat.id, msg, parse_mode='HTML')
+            return
+        else:
+            new_value = float(new_value)
+
+    dbjson = load_database()
+    yearmonth = ''.join([x for x in dbjson.keys()])
 
     alter_bill(bot=bot,
                message=message,
                database=dbjson,
                yearmonth=yearmonth,
-               key=key.lower(),
+               key=key,
                attr=attr,
                new_value=new_value)
-    msg = "<b>{0}</b> da conta <b>{1}</b> alterada!".format(attr.capitalize(), key)
+
+    msg = "<b>{}</b> da conta <b>{}</b> alterada!".format(attr.capitalize(), key)
     bot.send_message(message.chat.id, msg, parse_mode='HTML')
 
 
@@ -236,21 +309,32 @@ def remove_bill(message):
     msg = """Delete a conta desejada no formato: <b>key</b>
 
 <b>key</b> - Chave da conta
+
+<i>Formato:</i>
+
+<b>key</b> - Letras minúsculas, Traços (-) (opcional)
 """
+
     resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
     bot.register_next_step_handler(resp, get_deleted_bill)
 
 
 # delete a created bill from telegram bot
 def get_deleted_bill(message):
+    if not bool(re.search(r"^([a-z]+)$", message.text)):
+        msg = "Chave com o <b>formato inválido</b>!\n\n" \
+              "<b>Operação cancelada</b>"
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
+
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
 
-    key = message.text.lower()
-    msg = "Conta <b>{0}</b> removida!".format(key)
-    delete_bill(dbjson, yearmonth, key)
+    msg = "Conta <b>{}</b> removida!".format(message.text)
+    delete_bill(dbjson, yearmonth, message.text)
     bot.send_message(message.chat.id, msg, parse_mode='HTML')
 
-
-print('Wikibills em atividade...')
-bot.polling()
+if __name__ == '__main__':
+    # load_notifications_by_pay_day(bot, message)
+    print('Wikibills em atividade...')
+    bot.polling()

@@ -1,59 +1,59 @@
 {
     "201603": {
-        "expense": {
-            "pagar-claudio": {
-                "descr": "Pagar Cl\u00e1udio",
-                "status": true,
-                "pay_day": "",
-                "value": 23
-            },
-            "netflix": {
-                "descr": "Netflix",
-                "status": true,
-                "pay_day": "",
-                "value": 7.5
-            },
-            "nubank": {
-                "descr": "Nubank",
-                "status": true,
-                "pay_day": "15/03/2016",
-                "value": 171
-            },
-            "claro": {
-                "descr": "Claro",
-                "status": false,
-                "pay_day": "10/03/2016",
-                "value": 42
-            },
-            "superxcap": {
-                "descr": "SuperXCap",
-                "status": true,
-                "pay_day": "05/03/2016",
-                "value": 22.14
-            },
-            "casa": {
-                "descr": "Casa",
-                "status": false,
-                "pay_day": "",
-                "value": 150
-            },
-            "cabelo": {
-                "descr": "Cabelo",
-                "status": false,
-                "pay_day": "",
-                "value": 20
-            },
-            "faculdade": {
-                "descr": "Faculdade",
-                "status": true,
-                "pay_day": "07/03/2016",
-                "value": 600
-            }
-        },
         "receipt": {
             "salario": {
                 "descr": "Sal\u00e1rio",
                 "value": 1380
+            }
+        },
+        "expense": {
+            "netflix": {
+                "descr": "Netflix",
+                "status": true,
+                "value": 7.5,
+                "pay_day": ""
+            },
+            "superxcap": {
+                "descr": "SuperXCap",
+                "status": true,
+                "value": 22.14,
+                "pay_day": ""
+            },
+            "cabelo": {
+                "descr": "Cabelo",
+                "status": false,
+                "value": 20,
+                "pay_day": ""
+            },
+            "pagar-claudio": {
+                "descr": "Pagar Cl\u00e1udio",
+                "status": true,
+                "value": 23,
+                "pay_day": ""
+            },
+            "faculdade": {
+                "descr": "Faculdade",
+                "status": true,
+                "value": 600,
+                "pay_day": ""
+            },
+            "teste": {
+                "descr": "Testando Jsjjahdkj Jajshsjjsjsjdjssjjs",
+                "status": true,
+                "value": 777.77,
+                "pay_day": "12/12/2016"
+            },
+            "nubank": {
+                "descr": "Nubank",
+                "status": true,
+                "value": 171,
+                "pay_day": ""
+            },
+            "claro": {
+                "descr": "Claro",
+                "status": false,
+                "value": 42,
+                "pay_day": ""
             }
         }
     }
