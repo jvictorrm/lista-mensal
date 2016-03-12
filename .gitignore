@@ -2,4 +2,5 @@
 .lm
 trash.py
 *.ini
-cp_db.json
+*.json
+__pycache__

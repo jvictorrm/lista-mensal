@@ -39,7 +39,7 @@ def send_help_cmds(message):
 # Command '/pay' to show all commands
 @bot.message_handler(commands=['pay'])
 def pay_bill(message):
-    resp = re.search(r"^((\/pay){1} ([a-z]+))*$", message.text)
+    resp = re.search(r"^((\/pay){1} ([a-z]+(\-[a-z]+)*))$", message.text)
     if not resp:
         msg = "Comando com o <b>formato inválido</b>!\n" \
               "Formato correto: <b>/pay KEY</b>\n\n" \
@@ -59,7 +59,7 @@ def pay_bill(message):
 # Command '/owe' to show all commands
 @bot.message_handler(commands=['owe'])
 def owe_bill(message):
-    resp = re.search(r"^((\/owe){1} ([a-z]+))*$", message.text)
+    resp = re.search(r"^((\/owe){1} ([a-z]+(\-[a-z]+)*))$", message.text)
     if not resp:
         msg = "Comando com o <b>formato inválido</b>!\n" \
               "Formato correto: <b>/owe KEY</b>\n\n" \
@@ -79,7 +79,7 @@ def owe_bill(message):
 # Command '/detail' to show all attributes from bill
 @bot.message_handler(commands=['detail'])
 def detail_bill(message):
-    resp = re.search(r"^((\/detail){1} ([a-z]+))*$", message.text)
+    resp = re.search(r"^((\/detail){1} ([a-z]+(\-[a-z]+)*))$", message.text)
     if not resp:
         msg = "Comando com o <b>formato inválido</b>!\n" \
               "Formato correto: <b>/detail KEY</b>\n\n" \
@@ -162,8 +162,8 @@ Informe a nova conta no formato: <b>key*|descr*|value*|status|pay_day</b>
 
 # create a new bill from telegram bot
 def get_new_bill(message):
-    pattern_new = r"^([a-z]+(\-[a-z]+)*)\|" \
-                  r"(\w+( \w+)*)\|(\d+\.\d{2})\|?([Pp])?\|?(\d{2}\/\d{2}\/\d{4})?$"
+    pattern_new = r"^([a-z]+(\-[a-z]+)*)\|{1}" \
+                  r"(\w+( \w+)*)\|{1}(\d+?(\.\d{2})?)\|{1}?([Pp])?\|{1}?(\d{2}\/\d{2}\/\d{4})?$"
 
     if not bool(re.search(pattern_new, message.text)):
         msg = "Entrada de Inserção com o <b>formato inválido</b>!\n\n" \
@@ -243,7 +243,7 @@ def get_modified_bill(message):
             bot.send_message(message.chat.id, msg, parse_mode='HTML')
             return
     elif attr == 'value':
-        if not bool(re.search(r"^(\d+\.\d{2})$", new_value)):
+        if not bool(re.search(r"^(\d+?(\.\d{2})?)$", new_value)):
             msg = "<b>Valor da conta</b> com o formato inválido!\n\n" \
                   "<b>Operação cancelada</b>"
             bot.send_message(message.chat.id, msg, parse_mode='HTML')
@@ -267,7 +267,7 @@ def get_modified_bill(message):
 # Command '/del' to remove a created bill
 @bot.message_handler(commands=['del'])
 def remove_bill(message):
-    resp = (re.search(r"^((\/del){1} ([a-z]+))*$", message.text))
+    resp = (re.search(r"^((\/del){1} ([a-z]+(\-[a-z]+)*))$", message.text))
     if not resp:
         msg = "Comando com o <b>formato inválido</b>!\n" \
               "Formato correto: <b>/del KEY</b>\n\n" \
