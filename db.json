@@ -7,53 +7,53 @@
             }
         },
         "expense": {
-            "netflix": {
-                "descr": "Netflix",
+            "pagar-claudio": {
                 "status": true,
-                "value": 7.5,
-                "pay_day": ""
-            },
-            "superxcap": {
-                "descr": "SuperXCap",
-                "status": true,
-                "value": 22.14,
-                "pay_day": ""
+                "descr": "Pagar Cl\u00e1udio",
+                "pay_day": "",
+                "value": 23
             },
             "cabelo": {
-                "descr": "Cabelo",
                 "status": false,
-                "value": 20,
-                "pay_day": ""
-            },
-            "pagar-claudio": {
-                "descr": "Pagar Cl\u00e1udio",
-                "status": true,
-                "value": 23,
-                "pay_day": ""
-            },
-            "faculdade": {
-                "descr": "Faculdade",
-                "status": true,
-                "value": 600,
-                "pay_day": ""
-            },
-            "teste": {
-                "descr": "Testando Jsjjahdkj Jajshsjjsjsjdjssjjs",
-                "status": true,
-                "value": 777.77,
-                "pay_day": "12/12/2016"
-            },
-            "nubank": {
-                "descr": "Nubank",
-                "status": true,
-                "value": 171,
-                "pay_day": ""
+                "descr": "Cabelo",
+                "pay_day": "",
+                "value": 20
             },
             "claro": {
-                "descr": "Claro",
                 "status": false,
-                "value": 42,
-                "pay_day": ""
+                "descr": "Claro",
+                "pay_day": "",
+                "value": 42
+            },
+            "faculdade": {
+                "status": true,
+                "descr": "Faculdade",
+                "pay_day": "",
+                "value": 600
+            },
+            "netflix": {
+                "status": true,
+                "descr": "Netflix",
+                "pay_day": "",
+                "value": 7.5
+            },
+            "nubank": {
+                "status": true,
+                "descr": "Nubank",
+                "pay_day": "",
+                "value": 171
+            },
+            "superxcap": {
+                "status": true,
+                "descr": "SuperXCap",
+                "pay_day": "",
+                "value": 22.14
+            },
+            "teste": {
+                "status": false,
+                "descr": "Testando Jsjjahdkj Jajshsjjsjsjdjssjjs",
+                "pay_day": "12/12/2016",
+                "value": 777.77
             }
         }
     }

@@ -29,27 +29,5 @@ def get_next_month(yearmonth):
     return add_months(dt_yearmonth, 1).strftime('%Y%m')
 
 
-# def dt_to_str(datetime_, format_='%d/%m/%Y'):
-#    return datetime_.strftime(format_)
-
-
 def str_to_date(str_, format_='%d/%m/%Y'):
     return datetime.datetime.strptime(str_, format_)
-
-
-'''
-    Number Functions
-'''
-
-
-def is_number(num):
-    try:
-        float(num)  # for int, long and float
-    except ValueError:
-        try:
-            complex(num)  # for complex
-        except ValueError:
-            return False
-
-    return True
-

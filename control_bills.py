@@ -1,9 +1,6 @@
-from threading import Timer
-
-import time
+import json
 
 from useful import *
-import json
 
 '''
     Save/Load Database
@@ -30,17 +27,19 @@ def show_help_cmds():
         '/keys': 'Exibir todas as chaves das contas',
         '/new': 'Inserir nova conta',
         '/alt': 'Alterar algum dado da conta',
-        '/detail': 'Detalhar dados da conta',
-        '/del': 'Remover conta',
-        '/pay': 'Pagar uma conta',
-        '/owe': 'Dever uma conta',
+        '/detail \'key\'': 'Detalhar dados da conta',
+        '/del \'key\'': 'Remover conta',
+        '/pay \'key\'': 'Pagar uma conta',
+        '/owe \'key\'': 'Dever uma conta',
         '/wiki': 'Exibir todas os comandos para usar o Wikibills',
         '/turn_month': 'Faz a virada do mês'
     }
 
     msg = ''
     for k, v in dict_cmds.items():
-        msg += '<b>{0}</b><pre> - {1}</pre>\n'.format(k, v)
+        msg += '<b>{0}</b> - <pre>{1}</pre>\n'.format(k, v)
+
+    msg += "\n<b>(Chave sem aspas)</b>"
     return msg
 
 
@@ -82,22 +81,13 @@ def show_bills_keys(database, yearmonth):
     return out_bills_keys
 
 
-def new_bill(bot, message, database, yearmonth, key, descr, value, status=False, pay_day=''):
+def new_bill(database, yearmonth, key, descr, value, status=False, pay_day=''):
     database[yearmonth]['expense'][key] = {
             'descr': descr,
             'value': value,
             'pay_day': pay_day,
             'status': status
     }
-
-    if not pay_day == '':
-        warn_days = 3
-
-        sec_pay_day = (str_to_date(pay_day) - datetime.timedelta(days=warn_days)).timetuple()
-        Timer(time.mktime(sec_pay_day),
-              new_notification_pay_day,
-              [bot, message, database[yearmonth]['expense'][key]['descr'],
-               warn_days]).start()
 
     save_database(database)
 
@@ -107,42 +97,14 @@ def delete_bill(database, yearmonth, key):
     save_database(database)
 
 
-def alter_bill(bot, message, database, yearmonth, key, attr, new_value):
+def alter_bill(database, yearmonth, key, attr, new_value):
     database[yearmonth]['expense'][key][attr] = new_value
-
-    if attr in ['pay_day'] and not new_value == '':
-        warn_days = 3
-
-        sec_pay_day = (str_to_date(new_value) - datetime.timedelta(days=warn_days)).timetuple()
-        Timer(time.mktime(sec_pay_day),
-              new_notification_pay_day,
-              [bot, message, database[yearmonth]['expense'][key]['descr'],
-               warn_days]).start()
-
     save_database(database)
 
 
 def change_status_bill(database, yearmonth, key, status):
     database[yearmonth]['expense'][key]['status'] = status
     save_database(database)
-
-
-def new_notification_pay_day(bot, message, bill, days):
-    msg = "Conta <b>{}</b> vencerá em <b>{} dia(s)</b>".format(bill, days)
-    bot.send_message(message.chat.id, msg, parse_mode='HTML')
-
-
-def start_notify_all_pay_day(bot, message, database, yearmonth):
-    warn_days = 3
-
-    for k, v in database[yearmonth]['expense'].items():
-        if not v['pay_day']:
-            continue
-
-        sec_pay_day = (str_to_date(v['pay_day']) - datetime.timedelta(days=warn_days)).timetuple()
-        Timer(time.mktime(sec_pay_day),
-              new_notification_pay_day,
-              [bot, message, v['descr'], warn_days]).start()
 
 
 '''

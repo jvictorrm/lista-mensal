@@ -39,26 +39,18 @@ def send_help_cmds(message):
 # Command '/pay' to show all commands
 @bot.message_handler(commands=['pay'])
 def pay_bill(message):
-    msg = """Informe a conta a ser paga no formato: <b>key</b>
-
-<b>key</b> - Chave da conta
-    """
-    resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
-    bot.register_next_step_handler(resp, get_paid_bill)
-
-
-# pay a bill from telegram bot
-def get_paid_bill(message):
-    if not bool(re.search(r"^([a-z]+)$", message.text)):
-        msg = "Chave com o <b>formato inválido</b>!\n\n" \
+    resp = re.search(r"^((\/pay){1} ([a-z]+))*$", message.text)
+    if not resp:
+        msg = "Comando com o <b>formato inválido</b>!\n" \
+              "Formato correto: <b>/pay KEY</b>\n\n" \
               "<b>Operação cancelada</b>"
         bot.send_message(message.chat.id, msg, parse_mode='HTML')
         return
 
+    key = resp.group(3)
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
 
-    key = message.text
     msg = "Conta <b>{}</b> paga!".format(key)
     change_status_bill(dbjson, yearmonth, key, True)
     bot.send_message(message.chat.id, msg, parse_mode='HTML')
@@ -67,31 +59,19 @@ def get_paid_bill(message):
 # Command '/owe' to show all commands
 @bot.message_handler(commands=['owe'])
 def owe_bill(message):
-    msg = """Informe a conta a ser devida no formato: <b>key</b>
-
-<b>key</b> - Chave da conta
-
-<i>Formato:</i>
-
-<b>key</b> - Letras minúsculas, Traços (-) (opcional)
-    """
-    resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
-    bot.register_next_step_handler(resp, get_owed_bill)
-
-
-# to owe a bill from telegram bot
-def get_owed_bill(message):
-    if not bool(re.search(r"^([a-z]+)$", message.text)):
-        msg = "Chave com o <b>formato inválido</b>!\n\n" \
+    resp = re.search(r"^((\/owe){1} ([a-z]+))*$", message.text)
+    if not resp:
+        msg = "Comando com o <b>formato inválido</b>!\n" \
+              "Formato correto: <b>/owe KEY</b>\n\n" \
               "<b>Operação cancelada</b>"
         bot.send_message(message.chat.id, msg, parse_mode='HTML')
         return
 
+    key = resp.group(3)
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
 
-    key = message.text
-    msg = "Conta <b>{}</b> devida!".format(key)
+    msg = "Conta <b>{}</b> em débito!".format(key)
     change_status_bill(dbjson, yearmonth, key, False)
     bot.send_message(message.chat.id, msg, parse_mode='HTML')
 
@@ -99,31 +79,17 @@ def get_owed_bill(message):
 # Command '/detail' to show all attributes from bill
 @bot.message_handler(commands=['detail'])
 def detail_bill(message):
-    msg = """Informe a conta a ser detalhada no formato: <b>key</b>
-
-<b>key</b> - Chave da conta
-
-<i>Formato:</i>
-
-<b>key</b> - Letras minúsculas, Traços (-) (opcional)
-    """
-
-    resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
-    bot.register_next_step_handler(resp, get_detailed_bill)
-
-
-# to detail a bill from telegram bot
-def get_detailed_bill(message):
-    if not bool(re.search(r"^([a-z]+)$", message.text)):
-        msg = "Chave com o <b>formato inválido</b>!\n\n" \
+    resp = re.search(r"^((\/detail){1} ([a-z]+))*$", message.text)
+    if not resp:
+        msg = "Comando com o <b>formato inválido</b>!\n" \
+              "Formato correto: <b>/detail KEY</b>\n\n" \
               "<b>Operação cancelada</b>"
         bot.send_message(message.chat.id, msg, parse_mode='HTML')
         return
 
+    key = resp.group(3)
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
-
-    key = message.text
     status = 'Pago' if dbjson[yearmonth]['expense'][key]['status'] else 'Devendo'
 
     msg = """Informações da chave <b>{0}</b>
@@ -165,7 +131,6 @@ def get_resp_turn_month(message):
     yearmonth = ''.join([x for x in dbjson.keys()])
 
     change_month_activity(dbjson, yearmonth)
-    start_notify_all_pay_day(bot, message, dbjson, yearmonth)
     bot.send_message(message.chat.id, "<b>Operação realizada</b>", parse_mode='HTML')
 
 
@@ -211,9 +176,7 @@ def get_new_bill(message):
 
     key, descr, value, status, pay_day = message.text.split('|')
 
-    new_bill(bot=bot,
-             message=message,
-             database=dbjson,
+    new_bill(database=dbjson,
              yearmonth=yearmonth,
              key=key,
              descr=capitalize_str(descr),
@@ -291,9 +254,7 @@ def get_modified_bill(message):
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
 
-    alter_bill(bot=bot,
-               message=message,
-               database=dbjson,
+    alter_bill(database=dbjson,
                yearmonth=yearmonth,
                key=key,
                attr=attr,
@@ -306,35 +267,22 @@ def get_modified_bill(message):
 # Command '/del' to remove a created bill
 @bot.message_handler(commands=['del'])
 def remove_bill(message):
-    msg = """Delete a conta desejada no formato: <b>key</b>
-
-<b>key</b> - Chave da conta
-
-<i>Formato:</i>
-
-<b>key</b> - Letras minúsculas, Traços (-) (opcional)
-"""
-
-    resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
-    bot.register_next_step_handler(resp, get_deleted_bill)
-
-
-# delete a created bill from telegram bot
-def get_deleted_bill(message):
-    if not bool(re.search(r"^([a-z]+)$", message.text)):
-        msg = "Chave com o <b>formato inválido</b>!\n\n" \
+    resp = (re.search(r"^((\/del){1} ([a-z]+))*$", message.text))
+    if not resp:
+        msg = "Comando com o <b>formato inválido</b>!\n" \
+              "Formato correto: <b>/del KEY</b>\n\n" \
               "<b>Operação cancelada</b>"
         bot.send_message(message.chat.id, msg, parse_mode='HTML')
         return
 
+    key = resp.group(3)
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
 
-    msg = "Conta <b>{}</b> removida!".format(message.text)
-    delete_bill(dbjson, yearmonth, message.text)
+    msg = "Conta <b>{}</b> removida!".format(key)
+    delete_bill(dbjson, yearmonth, key)
     bot.send_message(message.chat.id, msg, parse_mode='HTML')
 
-if __name__ == '__main__':
-    # load_notifications_by_pay_day(bot, message)
-    print('Wikibills em atividade...')
-    bot.polling()
+
+print('Wikibills em atividade...')
+bot.polling()
