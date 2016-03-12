@@ -7,7 +7,7 @@ from useful import *
     Save/Load Database
 '''
 
-json_path = os.path.dirname(os.path.abspath(__file__)) + 'db.json'
+json_path = os.path.dirname(os.path.abspath(__file__)) + '/db.json'
 
 
 def save_database(database):
