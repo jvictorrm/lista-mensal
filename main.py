@@ -13,7 +13,7 @@ Setup the bot
 
 # get token from '.ini' file
 config = configparser.ConfigParser()
-config.read(os.path.dirname(os.path.abspath(__file__)) + 'project.ini')
+config.read(os.path.dirname(os.path.abspath(__file__)) + '/project.ini')
 bot = telebot.TeleBot(config['telegram']['token'])
 
 
