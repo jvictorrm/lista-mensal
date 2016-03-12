@@ -1,4 +1,5 @@
 import json
+import os
 
 from useful import *
 
@@ -6,14 +7,16 @@ from useful import *
     Save/Load Database
 '''
 
+json_path = os.path.dirname(os.path.abspath(__file__)) + 'db.json'
+
 
 def save_database(database):
-    with open('db.json', 'w') as out_json:
+    with open(json_path, 'w') as out_json:
         json.dump(database, out_json, indent=4)
 
 
 def load_database():
-    return json.loads(open('db.json').read())
+    return json.loads(open(json_path).read())
 
 
 '''

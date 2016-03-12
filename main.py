@@ -1,7 +1,10 @@
 # coding: utf-8
-import re
-import telebot
 import configparser
+import os
+import re
+
+import telebot
+
 from control_bills import *
 
 """
@@ -10,7 +13,7 @@ Setup the bot
 
 # get token from '.ini' file
 config = configparser.ConfigParser()
-config.read('project.ini')
+config.read(os.path.dirname(os.path.abspath(__file__)) + 'project.ini')
 bot = telebot.TeleBot(config['telegram']['token'])
 
 
