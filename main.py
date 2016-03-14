@@ -94,19 +94,13 @@ def detail_bill(message):
     yearmonth = ''.join([x for x in dbjson.keys()])
     status = 'Pago' if dbjson[yearmonth]['expense'][key]['status'] else 'Devendo'
 
-    msg = """Informações da chave <b>{0}</b>
-
-Descr....: <b>{1}</b>
-Valor....: <b>{2:6.2f}</b>
-Dt. Venc.: <b>{3}</b>
-Status...: <b>{4}</b>
-    """.format(key,
+    msg_detail_templ.format(key,
                dbjson[yearmonth]['expense'][key]['descr'],
                dbjson[yearmonth]['expense'][key]['value'],
                dbjson[yearmonth]['expense'][key]['pay_day'],
                status)
 
-    bot.send_message(message.chat.id, msg, parse_mode='HTML')
+    bot.send_message(message.chat.id, msg_detail_templ, parse_mode='HTML')
 
 
 # Command '/turn_month' to turn the month in activity
@@ -139,26 +133,7 @@ def get_resp_turn_month(message):
 # Command '/new' to create a new bill
 @bot.message_handler(commands=['new'])
 def create_new_bill(message):
-    msg = """
-Informe a nova conta no formato: <b>key*|descr*|value*|status|pay_day</b>
-
-<b>key*</b> - Chave da conta
-<b>descr*</b> - Descrição da conta
-<b>value*</b> - Valor da conta
-<b>status</b> - Status da conta
-<b>pay_day</b> - Data de Vencimento
-
-<i>Formato:</i>
-
-<b>key*</b> - Letras minúsculas, Traços (-) (opcional)
-<b>descr*</b> - Livre, Alfanumérico somente
-<b>value*</b> - Decimal <b>(Ex: 9999999.99)</b>
-<b>status</b> - <b>P</b> para Pago ou <b>campo vazio</b> para Devendo
-<b>pay_day</b> - <b>DD/MM/AAAA</b>
-
-<i>(*) Campos obrigatórios</i>
-    """
-    resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
+    resp = bot.send_message(message.chat.id, msg_new_templ, parse_mode='HTML')
     bot.register_next_step_handler(resp, get_new_bill)
 
 
@@ -193,23 +168,7 @@ def get_new_bill(message):
 # Command '/alt' to modify a created bill
 @bot.message_handler(commands=['alt'])
 def modify_bill(message):
-    msg = """Altere a conta desejada no formato: <b>key*|attr*|new_value*</b>
-
-<b>key*</b> - Chave da conta
-<b>attr*</b> - Atributo da conta
-<b>new_value*</b> - Novo valor para o atrib. da conta
-
-<i>Formato:</i>
-
-<b>key*</b> - Letras minúsculas, Traços (-) (opcional)
-<b>attr*</b> - Letras minúsculas somente
-<b>new_value*</b> - Livre**
-
-<i>(*) Campos obrigatórios (somente </i><b>Data de Venc.</b><i> pode estar vazia)</i>
-<i>(**) Informar o valor no formato do atributo a ser alterado</i>
-"""
-
-    resp = bot.send_message(message.chat.id, msg, parse_mode='HTML')
+    resp = bot.send_message(message.chat.id, msg_modify_templ, parse_mode='HTML')
     bot.register_next_step_handler(resp, get_modified_bill)
 
 
