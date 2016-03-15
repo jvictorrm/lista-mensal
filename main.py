@@ -53,6 +53,12 @@ def pay_bill(message):
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
 
+    if key not in dbjson[yearmonth]['expense']:
+        msg = "Chave <b>{}</b> não existe!\n\n" \
+              "<b>Operação cancelada</b>".format(key)
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
+
     msg = "Conta <b>{}</b> paga!".format(key)
     change_status_bill(dbjson, yearmonth, key, True)
     bot.send_message(message.chat.id, msg, parse_mode='HTML')
@@ -72,6 +78,12 @@ def owe_bill(message):
     key = resp.group(3)
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
+
+    if key not in dbjson[yearmonth]['expense']:
+        msg = "Chave <b>{}</b> não existe!\n\n" \
+              "<b>Operação cancelada</b>".format(key)
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
 
     msg = "Conta <b>{}</b> em débito!".format(key)
     change_status_bill(dbjson, yearmonth, key, False)
@@ -93,6 +105,12 @@ def detail_bill(message):
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
     status = 'Pago' if dbjson[yearmonth]['expense'][key]['status'] else 'Devendo'
+
+    if key not in dbjson[yearmonth]['expense']:
+        msg = "Chave <b>{}</b> não existe!\n\n" \
+              "<b>Operação cancelada</b>".format(key)
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
 
     msg_detail_templ.format(key,
                dbjson[yearmonth]['expense'][key]['descr'],
@@ -183,6 +201,14 @@ def get_modified_bill(message):
         return
 
     key, attr, new_value = message.text.split('|')
+    dbjson = load_database()
+    yearmonth = ''.join([x for x in dbjson.keys()])
+
+    if key not in dbjson[yearmonth]['expense']:
+        msg = "Chave <b>{}</b> não existe!\n\n" \
+              "<b>Operação cancelada</b>".format(key)
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
 
     if attr == 'descr':
         if not bool(re.search(r"^(\w+( \w+)*)$", new_value)):
@@ -212,9 +238,6 @@ def get_modified_bill(message):
         else:
             new_value = float(new_value)
 
-    dbjson = load_database()
-    yearmonth = ''.join([x for x in dbjson.keys()])
-
     alter_bill(database=dbjson,
                yearmonth=yearmonth,
                key=key,
@@ -239,6 +262,12 @@ def remove_bill(message):
     key = resp.group(3)
     dbjson = load_database()
     yearmonth = ''.join([x for x in dbjson.keys()])
+
+    if key not in dbjson[yearmonth]['expense']:
+        msg = "Chave <b>{}</b> não existe!\n\n" \
+              "<b>Operação cancelada</b>".format(key)
+        bot.send_message(message.chat.id, msg, parse_mode='HTML')
+        return
 
     msg = "Conta <b>{}</b> removida!".format(key)
     delete_bill(dbjson, yearmonth, key)
