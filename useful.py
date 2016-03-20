@@ -68,11 +68,3 @@ msg_modify_templ = """Altere a conta desejada no formato: <b>key*|attr*|new_valu
 <i>(*) Campos obrigatórios (somente </i><b>Data de Venc.</b><i> pode estar vazia)</i>
 <i>(**) Informar o valor no formato do atributo a ser alterado</i>
 """
-
-msg_detail_templ = """Informações da chave <b>{0}</b>
-
-Descr....: <b>{1}</b>
-Valor....: <b>{2:6.2f}</b>
-Dt. Venc.: <b>{3}</b>
-Status...: <b>{4}</b>
-"""
