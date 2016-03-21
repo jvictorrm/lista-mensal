@@ -112,19 +112,13 @@ def detail_bill(message):
         bot.send_message(message.chat.id, msg, parse_mode='HTML')
         return
 
-    msg_detail_templ = """Informações da chave <b>{0}</b>
-
-Descr....: <b>{1}</b>
-Valor....: <b>{2:6.2f}</b>
-Dt. Venc.: <b>{3}</b>
-Status...: <b>{4}</b>
-""".format(key,
-           dbjson[yearmonth]['expense'][key]['descr'],
-           dbjson[yearmonth]['expense'][key]['value'],
-           dbjson[yearmonth]['expense'][key]['pay_day'],
-           status)
-
-    bot.send_message(message.chat.id, msg_detail_templ, parse_mode='HTML')
+    bot.send_message(message.chat.id,
+                     msg_detail_templ.format(key,
+                                             dbjson[yearmonth]['expense'][key]['descr'],
+                                             dbjson[yearmonth]['expense'][key]['value'],
+                                             dbjson[yearmonth]['expense'][key]['pay_day'],
+                                             status),
+                     parse_mode='HTML')
 
 
 # Command '/turn_month' to turn the month in activity
